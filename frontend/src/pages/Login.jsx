@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import api from '@/utils/api';
-import { LogIn } from 'lucide-react';
+import api from '../utils/api';
+import { FiLogIn, FiCheckCircle } from 'react-icons/fi';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -18,34 +19,34 @@ const Login = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!formData.email) {
       newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Email is invalid';
     }
-    
+
     if (!formData.password) {
       newErrors.password = 'Password is required';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
-    
+
     setLoading(true);
-    
+
     try {
       const response = await api.post('/auth/login', formData);
-      
+
       localStorage.setItem('token', response.data.access_token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
-      
+
       toast.success('Welcome back!');
       navigate('/dashboard');
     } catch (error) {
@@ -57,84 +58,95 @@ const Login = () => {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 h-screen w-full">
-      <div className="flex items-center justify-center p-8 lg:p-12">
-        <div className="w-full max-w-md space-y-8">
-          <div className="space-y-2">
-            <h1 className="text-4xl font-bold tracking-tight" data-testid="login-heading">
-              Welcome back
+    <div className="min-h-screen bg-[#f5f5f5] flex items-center justify-center p-6">
+      <div className="w-full max-w-md">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="space-y-8"
+        >
+          {/* Logo */}
+          <div className="text-center space-y-4">
+            <h1 className="text-5xl font-bold text-black" data-testid="login-heading">
+              TaskFlow
             </h1>
-            <p className="text-base text-muted-foreground">
-              Sign in to your account to continue
+            <p className="text-black/60 text-lg">
+              Sign in to your account
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6" data-testid="login-form">
+          {/* Form */}
+          <motion.form
+            onSubmit={handleSubmit}
+            className="space-y-5"
+            data-testid="login-form"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-sm font-semibold text-black">Email Address</Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="you@example.com"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className={errors.email ? 'border-destructive' : ''}
+                className={`h-14 input-white text-black text-base ${errors.email ? 'border-red-500' : ''}`}
                 data-testid="login-email-input"
               />
               {errors.email && (
-                <p className="text-sm text-destructive" data-testid="email-error">{errors.email}</p>
+                <p className="text-sm text-red-600" data-testid="email-error">{errors.email}</p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-sm font-semibold text-black">Password</Label>
               <Input
                 id="password"
                 type="password"
                 placeholder="••••••••"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className={errors.password ? 'border-destructive' : ''}
+                className={`h-14 input-white text-black text-base ${errors.password ? 'border-red-500' : ''}`}
                 data-testid="login-password-input"
               />
               {errors.password && (
-                <p className="text-sm text-destructive" data-testid="password-error">{errors.password}</p>
+                <p className="text-sm text-red-600" data-testid="password-error">{errors.password}</p>
               )}
             </div>
 
-            <Button
-              type="submit"
-              className="w-full h-11"
-              disabled={loading}
-              data-testid="login-submit-button"
-            >
-              {loading ? (
-                'Signing in...'
-              ) : (
-                <>
-                  <LogIn className="mr-2 h-4 w-4" />
-                  Sign in
-                </>
-              )}
-            </Button>
-          </form>
+            <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+              <Button
+                type="submit"
+                className="w-full h-14 btn-white text-base font-semibold rounded-2xl flex items-center justify-center gap-2"
+                disabled={loading}
+                data-testid="login-submit-button"
+              >
+                {loading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 border-2 border-black/20 border-t-black rounded-full animate-spin"></div>
+                    Signing in...
+                  </div>
+                ) : (
+                  <>
+                    <FiLogIn className="h-5 w-5" />
+                    Sign in
+                  </>
+                )}
+              </Button>
+            </motion.div>
+          </motion.form>
 
-          <div className="text-center text-sm">
-            <span className="text-muted-foreground">Don't have an account? </span>
-            <Link to="/register" className="text-accent hover:underline font-medium" data-testid="register-link">
-              Sign up
+          {/* Sign Up Link */}
+          <div className="text-center text-sm pt-4">
+            <span className="text-black/60">Don't have an account? </span>
+            <Link to="/register" className="text-black hover:underline font-semibold" data-testid="register-link">
+              Create one now
             </Link>
           </div>
-        </div>
-      </div>
-
-      <div className="hidden lg:block relative">
-        <img
-          src="https://images.unsplash.com/photo-1554751201-db13daf9e4ee?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2ODl8MHwxfHNlYXJjaHwzfHxhYnN0cmFjdCUyMG1pbmltYWwlMjBhcmNoaXRlY3R1cmUlMjB3aGl0ZSUyMGNvbmNyZXRlfGVufDB8fHx8MTc3MDY5NzQxOHww&ixlib=rb-4.1.0&q=85"
-          alt="Abstract architectural swirl"
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+        </motion.div>
       </div>
     </div>
   );

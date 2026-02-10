@@ -3,6 +3,9 @@ import { Toaster } from 'sonner';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import Dashboard from '@/pages/Dashboard';
+import Analytics from '@/pages/Analytics';
+import Documentation from '@/pages/Documentation';
+import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import '@/App.css';
 
@@ -18,13 +21,35 @@ function App() {
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <Dashboard />
+                <DashboardLayout>
+                  <Dashboard />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/analytics"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <Analytics />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/documentation"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <Documentation />
+                </DashboardLayout>
               </ProtectedRoute>
             }
           />
         </Routes>
       </BrowserRouter>
-      <Toaster position="top-right" richColors />
+      <Toaster position="top-right" richColors theme="dark" />
     </div>
   );
 }

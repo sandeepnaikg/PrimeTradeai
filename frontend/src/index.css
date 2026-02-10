@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Manrope:wght@300;400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,26 +6,26 @@
 
 @layer base {
     :root {
-        --background: 0 0% 100%;
-        --foreground: 222 47% 11%;
+        --background: 0 0% 97%;
+        --foreground: 0 0% 10%;
         --card: 0 0% 100%;
-        --card-foreground: 222 47% 11%;
+        --card-foreground: 0 0% 10%;
         --popover: 0 0% 100%;
-        --popover-foreground: 222 47% 11%;
-        --primary: 222 47% 11%;
-        --primary-foreground: 210 40% 98%;
-        --secondary: 210 40% 96.1%;
-        --secondary-foreground: 222 47% 11%;
-        --muted: 210 40% 96.1%;
-        --muted-foreground: 215 20% 50%;
-        --accent: 217 91% 60%;
+        --popover-foreground: 0 0% 10%;
+        --primary: 180 15% 43%;
+        --primary-foreground: 0 0% 100%;
+        --secondary: 0 0% 96%;
+        --secondary-foreground: 0 0% 10%;
+        --muted: 0 0% 96%;
+        --muted-foreground: 0 0% 45%;
+        --accent: 180 15% 43%;
         --accent-foreground: 0 0% 100%;
         --destructive: 0 84% 60%;
         --destructive-foreground: 0 0% 100%;
-        --border: 214 32% 91%;
-        --input: 214 32% 91%;
-        --ring: 222 47% 11%;
-        --radius: 0.5rem;
+        --border: 0 0% 90%;
+        --input: 0 0% 90%;
+        --ring: 180 15% 43%;
+        --radius: 0.75rem;
     }
 }
 
@@ -33,12 +33,121 @@
     * {
         @apply border-border;
     }
+
     body {
         @apply bg-background text-foreground;
         font-family: 'Inter', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        background-color: #f5f7f9;
     }
-    h1, h2, h3, h4, h5, h6 {
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
         font-family: 'Manrope', sans-serif;
+        font-weight: 700;
+        color: #111827;
+    }
+}
+
+@layer components {
+    .white-card {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        transition: all 0.2s ease;
+    }
+
+    .white-card:hover {
+        border-color: #d1d5db;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    }
+
+    .card-hover {
+        transition: all 0.2s ease;
+    }
+
+    .card-hover:hover {
+        transform: translateY(-1px);
+    }
+
+    .animate-fade-in {
+        animation: fadeIn 0.3s ease-in;
+    }
+
+    .animate-slide-up {
+        animation: slideUp 0.4s ease-out;
+    }
+
+    .animate-scale-in {
+        animation: scaleIn 0.2s ease-out;
+    }
+
+    .btn-white {
+        background: #ffffff;
+        color: #374151;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        border: 1px solid #d1d5db;
+    }
+
+    .btn-white:hover {
+        background: #f9fafb;
+        border-color: #9ca3af;
+    }
+
+    .input-white {
+        background: #ffffff;
+        border: 1px solid #d1d5db;
+        color: #111827;
+        transition: all 0.2s ease;
+    }
+
+    .input-white:focus {
+        border-color: #5f7a7a;
+        box-shadow: 0 0 0 3px rgba(95, 122, 122, 0.1);
+    }
+
+    .input-white::placeholder {
+        color: #9ca3af;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
     }
 }
 
@@ -47,7 +156,7 @@
         display: contents !important;
     }
 
-    [data-debug-wrapper="true"] > * {
+    [data-debug-wrapper="true"]>* {
         margin-left: inherit;
         margin-right: inherit;
         margin-top: inherit;
@@ -72,4 +181,29 @@
         border-top-color: inherit;
         border-bottom-color: inherit;
     }
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f5f7f9;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+}
+
+/* Selection */
+::selection {
+    background: #5f7a7a;
+    color: #ffffff;
 }

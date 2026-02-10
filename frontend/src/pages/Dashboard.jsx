@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
+import gsap from 'gsap';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,12 +12,6 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -24,33 +19,17 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
-import api from '@/utils/api';
-import {
-  Plus,
-  Search,
-  Filter,
-  LogOut,
-  User,
-  CheckSquare,
-  Edit2,
-  Trash2,
-  MoreVertical,
-} from 'lucide-react';
+import api from '../utils/api.js';
+import { FiCode, FiTool, FiFileText, FiPlus, FiSearch, FiEdit2, FiTrash2, FiList, FiGrid, FiActivity, FiClock } from 'react-icons/fi';
 
 const Dashboard = () => {
-  const navigate = useNavigate();
-  const [user, setUser] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [filteredTasks, setFilteredTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [priorityFilter, setPriorityFilter] = useState('all');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
-  const [profileName, setProfileName] = useState('');
   const [taskForm, setTaskForm] = useState({
     title: '',
     description: '',
@@ -58,25 +37,48 @@ const Dashboard = () => {
     priority: 'medium',
   });
 
+  const statsRef = useRef([]);
+  const tasksRef = useRef([]);
+
   useEffect(() => {
-    loadUserData();
     loadTasks();
   }, []);
 
   useEffect(() => {
     filterTasks();
-  }, [tasks, searchQuery, statusFilter, priorityFilter]);
+  }, [tasks, searchQuery]);
 
-  const loadUserData = async () => {
-    try {
-      const response = await api.get('/auth/profile');
-      setUser(response.data);
-      setProfileName(response.data.name);
-      localStorage.setItem('user', JSON.stringify(response.data));
-    } catch (error) {
-      console.error('Failed to load user data:', error);
+  useEffect(() => {
+    if (statsRef.current.length > 0) {
+      gsap.fromTo(
+        statsRef.current,
+        { y: 30, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.6,
+          stagger: 0.1,
+          ease: 'power3.out',
+        }
+      );
     }
-  };
+  }, [tasks]);
+
+  useEffect(() => {
+    if (tasksRef.current.length > 0) {
+      gsap.fromTo(
+        tasksRef.current,
+        { x: -20, opacity: 0 },
+        {
+          x: 0,
+          opacity: 1,
+          duration: 0.5,
+          stagger: 0.08,
+          ease: 'power2.out',
+        }
+      );
+    }
+  }, [filteredTasks]);
 
   const loadTasks = async () => {
     try {
@@ -102,20 +104,12 @@ const Dashboard = () => {
       );
     }
 
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter((task) => task.status === statusFilter);
-    }
-
-    if (priorityFilter !== 'all') {
-      filtered = filtered.filter((task) => task.priority === priorityFilter);
-    }
-
     setFilteredTasks(filtered);
   };
 
   const handleCreateTask = async (e) => {
     e.preventDefault();
-    
+
     if (!taskForm.title.trim()) {
       toast.error('Task title is required');
       return;
@@ -135,7 +129,7 @@ const Dashboard = () => {
 
   const handleUpdateTask = async (e) => {
     e.preventDefault();
-    
+
     if (!taskForm.title.trim()) {
       toast.error('Task title is required');
       return;
@@ -167,28 +161,6 @@ const Dashboard = () => {
     }
   };
 
-  const handleUpdateProfile = async (e) => {
-    e.preventDefault();
-
-    try {
-      const response = await api.put('/auth/profile', { name: profileName });
-      setUser(response.data);
-      localStorage.setItem('user', JSON.stringify(response.data));
-      toast.success('Profile updated successfully');
-      setIsProfileDialogOpen(false);
-    } catch (error) {
-      console.error('Failed to update profile:', error);
-      toast.error('Failed to update profile');
-    }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    toast.success('Logged out successfully');
-    navigate('/login');
-  };
-
   const openEditDialog = (task) => {
     setSelectedTask(task);
     setTaskForm({
@@ -200,273 +172,359 @@ const Dashboard = () => {
     setIsEditDialogOpen(true);
   };
 
-  const getStatusBadgeClass = (status) => {
-    const classes = {
-      pending: 'bg-slate-100 text-slate-700 border-slate-200',
-      'in-progress': 'bg-blue-50 text-blue-700 border-blue-200',
-      completed: 'bg-green-50 text-green-700 border-green-200',
-    };
-    return classes[status] || classes.pending;
+  const stats = {
+    total: tasks.length,
+    completed: tasks.filter(t => t.status === 'completed').length,
+    inProgress: tasks.filter(t => t.status === 'in-progress').length,
   };
 
-  const getPriorityBadgeClass = (priority) => {
-    const classes = {
-      low: 'bg-slate-100 text-slate-600',
-      medium: 'bg-amber-50 text-amber-700',
-      high: 'bg-red-50 text-red-700',
-    };
-    return classes[priority] || classes.medium;
+  const CircularProgress = ({ value, total, color, label, subtitle, metric }) => {
+    const percentage = total > 0 ? (value / total) * 100 : 0;
+    const radius = 40;
+    const circumference = 2 * Math.PI * radius;
+    const offset = circumference - (percentage / 100) * circumference;
+
+    return (
+      <div className="flex flex-col items-start">
+        <div className="relative w-24 h-24 mb-3">
+          <svg className="transform -rotate-90 w-24 h-24">
+            <circle
+              cx="48"
+              cy="48"
+              r={radius}
+              stroke="#e5e7eb"
+              strokeWidth="6"
+              fill="none"
+            />
+            <circle
+              cx="48"
+              cy="48"
+              r={radius}
+              stroke={color}
+              strokeWidth="6"
+              fill="none"
+              strokeDasharray={circumference}
+              strokeDashoffset={offset}
+              strokeLinecap="round"
+              className="transition-all duration-1000 ease-out"
+            />
+          </svg>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-2xl font-bold text-gray-800">{value}</span>
+          </div>
+        </div>
+        <div>
+          <p className="text-base font-bold text-gray-800 mb-0.5">{label}</p>
+          <p className="text-xs text-gray-500 mb-1">{subtitle}</p>
+          <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">{metric}</p>
+        </div>
+      </div>
+    );
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <CheckSquare className="h-6 w-6 text-accent" />
-            <h1 className="text-2xl font-bold" data-testid="app-title">TaskFlow</h1>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Dialog open={isProfileDialogOpen} onOpenChange={setIsProfileDialogOpen}>
-              <DialogTrigger asChild>
-                <Button variant="ghost" className="gap-2" data-testid="profile-button">
-                  <User className="h-4 w-4" />
-                  {user?.name}
-                </Button>
-              </DialogTrigger>
-              <DialogContent data-testid="profile-dialog">
-                <DialogHeader>
-                  <DialogTitle>Profile Settings</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleUpdateProfile} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="profileName">Name</Label>
-                    <Input
-                      id="profileName"
-                      value={profileName}
-                      onChange={(e) => setProfileName(e.target.value)}
-                      data-testid="profile-name-input"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Email</Label>
-                    <Input value={user?.email} disabled data-testid="profile-email-display" />
-                  </div>
-                  <Button type="submit" className="w-full" data-testid="profile-save-button">
-                    Save Changes
-                  </Button>
-                </form>
-              </DialogContent>
-            </Dialog>
-
-            <Button variant="ghost" onClick={handleLogout} className="gap-2" data-testid="logout-button">
-              <LogOut className="h-4 w-4" />
-              Logout
-            </Button>
-          </div>
+    <div className="max-w-7xl mx-auto px-8 py-8">
+      {/* Page Header */}
+      <div className="flex items-start justify-between mb-8">
+        <div>
+          <h2 className="text-4xl font-bold text-gray-900 mb-2" data-testid="dashboard-heading">Project Workspace</h2>
+          <p className="text-sm text-gray-500 italic">"Building the future of efficiency, one task at a time."</p>
         </div>
-      </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        <div className="space-y-6">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <h2 className="text-3xl font-bold tracking-tight" data-testid="dashboard-heading">Your Tasks</h2>
-              <p className="text-muted-foreground mt-1">
-                Manage and track your daily tasks
-              </p>
-            </div>
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <DialogTrigger asChild>
+            <button className="flex items-center gap-2 px-5 py-2.5 bg-[#5f7a7a] hover:bg-[#4d6262] text-white rounded-lg font-medium transition-colors" data-testid="create-task-button">
+              <FiPlus className="h-4 w-4" />
+              Create New Task
+            </button>
+          </DialogTrigger>
+          <DialogContent data-testid="create-task-dialog" className="bg-white">
+            <DialogHeader>
+              <DialogTitle>Create New Task</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleCreateTask} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="title">Title *</Label>
+                <Input
+                  id="title"
+                  value={taskForm.title}
+                  onChange={(e) => setTaskForm({ ...taskForm, title: e.target.value })}
+                  placeholder="Enter task title"
+                  data-testid="task-title-input"
+                  className="h-10"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Input
+                  id="description"
+                  value={taskForm.description}
+                  onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })}
+                  placeholder="Enter task description"
+                  data-testid="task-description-input"
+                  className="h-10"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="status">Status</Label>
+                  <Select
+                    value={taskForm.status}
+                    onValueChange={(value) => setTaskForm({ ...taskForm, status: value })}
+                  >
+                    <SelectTrigger data-testid="task-status-select" className="h-10">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white">
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="in-progress">In Progress</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="priority">Priority</Label>
+                  <Select
+                    value={taskForm.priority}
+                    onValueChange={(value) => setTaskForm({ ...taskForm, priority: value })}
+                  >
+                    <SelectTrigger data-testid="task-priority-select" className="h-10">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white">
+                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <Button type="submit" className="w-full bg-[#5f7a7a] hover:bg-[#4d6262]" data-testid="create-task-submit">
+                Create Task
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
 
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="gap-2" data-testid="create-task-button">
-                  <Plus className="h-4 w-4" />
-                  New Task
-                </Button>
-              </DialogTrigger>
-              <DialogContent data-testid="create-task-dialog">
-                <DialogHeader>
-                  <DialogTitle>Create New Task</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleCreateTask} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="title">Title *</Label>
-                    <Input
-                      id="title"
-                      value={taskForm.title}
-                      onChange={(e) => setTaskForm({ ...taskForm, title: e.target.value })}
-                      placeholder="Enter task title"
-                      data-testid="task-title-input"
-                    />
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        <motion.div
+          ref={(el) => (statsRef.current[0] = el)}
+          className="bg-white rounded-2xl p-6 border border-gray-200"
+          whileHover={{ y: -2 }}
+        >
+          <CircularProgress
+            value={stats.total}
+            total={stats.total}
+            color="#5f7a7a"
+            label="Total Tasks"
+            subtitle="Backlog Items"
+            metric="SCALE: HIGH"
+          />
+        </motion.div>
+
+        <motion.div
+          ref={(el) => (statsRef.current[1] = el)}
+          className="bg-white rounded-2xl p-6 border border-gray-200"
+          whileHover={{ y: -2 }}
+        >
+          <CircularProgress
+            value={stats.inProgress}
+            total={stats.total}
+            color="#d4a574"
+            label="In Progress"
+            subtitle="Ongoing Sprints"
+            metric="50% VELOCITY"
+          />
+        </motion.div>
+
+        <motion.div
+          ref={(el) => (statsRef.current[2] = el)}
+          className="bg-white rounded-2xl p-6 border border-gray-200"
+          whileHover={{ y: -2 }}
+        >
+          <CircularProgress
+            value={stats.completed}
+            total={stats.total}
+            color="#6b9b7f"
+            label="Completed"
+            subtitle="Shipped Features"
+            metric="75% ACCURACY"
+          />
+        </motion.div>
+      </div>
+
+      {/* Task List Header */}
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-2xl font-bold text-gray-900">Task List</h3>
+        <div className="flex items-center gap-2">
+          <button className="p-2 hover:bg-gray-100 rounded-lg">
+            <FiList className="h-5 w-5 text-gray-600" />
+          </button>
+          <button className="p-2 hover:bg-gray-100 rounded-lg">
+            <FiGrid className="h-5 w-5 text-gray-600" />
+          </button>
+        </div>
+      </div>
+
+      {/* Search and Filter */}
+      <div className="flex items-center gap-3 mb-6">
+        <div className="relative flex-1 max-w-md">
+          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="Search tasks by title or ID..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 h-10 bg-white border-gray-300"
+            data-testid="search-input"
+          />
+        </div>
+        <Select defaultValue="all">
+          <SelectTrigger className="w-40 h-10 bg-white">
+            <SelectValue placeholder="All Priorities" />
+          </SelectTrigger>
+          <SelectContent className="bg-white">
+            <SelectItem value="all">All Priorities</SelectItem>
+            <SelectItem value="high">High</SelectItem>
+            <SelectItem value="medium">Medium</SelectItem>
+            <SelectItem value="low">Low</SelectItem>
+          </SelectContent>
+        </Select>
+        <button className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
+          Filter
+        </button>
+      </div>
+
+      {/* Tasks List */}
+      {loading ? (
+        <div className="text-center py-16" data-testid="loading-state">
+          <div className="w-12 h-12 border-4 border-gray-200 border-t-[#5f7a7a] rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-500">Loading tasks...</p>
+        </div>
+      ) : (
+        <div className="space-y-4" data-testid="tasks-list">
+          {filteredTasks.map((task, index) => {
+            const getIcon = () => {
+              if (index % 3 === 0) return FiCode;
+              if (index % 3 === 1) return FiTool;
+              return FiFileText;
+            };
+
+            const Icon = getIcon();
+            const iconBg = index % 3 === 0 ? 'bg-orange-50' : index % 3 === 1 ? 'bg-teal-50' : 'bg-gray-100';
+            const iconColor = index % 3 === 0 ? 'text-orange-600' : index % 3 === 1 ? 'text-teal-600' : 'text-gray-600';
+
+            return (
+              <motion.div
+                key={task.id}
+                ref={(el) => (tasksRef.current[index] = el)}
+                className="bg-white rounded-xl p-5 border border-gray-200 hover:border-gray-300 transition-colors"
+                data-testid={`task-item-${task.id}`}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.05 }}
+              >
+                <div className="flex items-start gap-4">
+                  <div className={`flex-shrink-0 w-12 h-12 ${iconBg} rounded-lg flex items-center justify-center`}>
+                    <Icon className={`h-6 w-6 ${iconColor}`} />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Input
-                      id="description"
-                      value={taskForm.description}
-                      onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })}
-                      placeholder="Enter task description"
-                      data-testid="task-description-input"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="status">Status</Label>
-                      <Select
-                        value={taskForm.status}
-                        onValueChange={(value) => setTaskForm({ ...taskForm, status: value })}
-                      >
-                        <SelectTrigger data-testid="task-status-select">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="pending">Pending</SelectItem>
-                          <SelectItem value="in-progress">In Progress</SelectItem>
-                          <SelectItem value="completed">Completed</SelectItem>
-                        </SelectContent>
-                      </Select>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between mb-2">
+                      <h3 className="text-base font-bold text-gray-900" data-testid="task-title">
+                        {task.title}
+                      </h3>
+                      <span className={`text-xs font-bold px-2.5 py-1 rounded ${task.priority === 'high' ? 'bg-red-50 text-red-600' :
+                          task.priority === 'medium' ? 'bg-yellow-50 text-yellow-700' :
+                            'bg-blue-50 text-blue-600'
+                        }`} data-testid="task-priority">
+                        {task.priority.toUpperCase()}
+                      </span>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="priority">Priority</Label>
-                      <Select
-                        value={taskForm.priority}
-                        onValueChange={(value) => setTaskForm({ ...taskForm, priority: value })}
-                      >
-                        <SelectTrigger data-testid="task-priority-select">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="low">Low</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="high">High</SelectItem>
-                        </SelectContent>
-                      </Select>
+
+                    {task.description && (
+                      <p className="text-sm text-gray-600 mb-3" data-testid="task-description">
+                        {task.description}
+                      </p>
+                    )}
+
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs px-2.5 py-1 bg-gray-100 text-gray-700 rounded font-medium">
+                        {task.status === 'completed' ? 'Frontend' : task.status === 'in-progress' ? 'State' : 'Testing'}
+                      </span>
+                      <span className="text-xs px-2.5 py-1 bg-gray-100 text-gray-700 rounded font-medium">
+                        {task.status === 'completed' ? 'Auth' : task.status === 'in-progress' ? 'Refactor' : 'Quality'}
+                      </span>
+                      <span className="text-xs px-2.5 py-1 bg-gray-100 text-gray-700 rounded font-medium">
+                        {task.status === 'completed' ? 'v1.2.0' : task.status === 'in-progress' ? 'Optimization' : 'CI/CD'}
+                      </span>
                     </div>
                   </div>
-                  <Button type="submit" className="w-full" data-testid="create-task-submit">
-                    Create Task
-                  </Button>
-                </form>
-              </DialogContent>
-            </Dialog>
-          </div>
 
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search tasks..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-                data-testid="search-input"
-              />
-            </div>
-            <div className="flex gap-2">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[150px]" data-testid="status-filter">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="in-progress">In Progress</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-                <SelectTrigger className="w-[150px]" data-testid="priority-filter">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Priority" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Priority</SelectItem>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {loading ? (
-            <div className="text-center py-12" data-testid="loading-state">
-              <p className="text-muted-foreground">Loading tasks...</p>
-            </div>
-          ) : filteredTasks.length === 0 ? (
-            <div className="text-center py-12 space-y-4" data-testid="empty-state">
-              <img
-                src="https://images.unsplash.com/photo-1622579521534-8252f7da47fd?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzF8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBvZmZpY2UlMjB3b3Jrc3BhY2UlMjBkZXNrJTIwbWluaW1hbGlzdHxlbnwwfHx8fDE3NzA2OTc0MjR8MA&ixlib=rb-4.1.0&q=85"
-                alt="No tasks"
-                className="w-64 h-64 object-cover rounded-xl mx-auto opacity-50"
-              />
-              <p className="text-muted-foreground">No tasks found. Create your first task to get started!</p>
-            </div>
-          ) : (
-            <div className="grid gap-4" data-testid="tasks-list">
-              {filteredTasks.map((task) => (
-                <div
-                  key={task.id}
-                  className="bg-white border border-slate-200 rounded-xl p-6 hover:shadow-md transition-shadow"
-                  data-testid={`task-item-${task.id}`}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 space-y-2">
-                      <h3 className="text-xl font-semibold" data-testid="task-title">{task.title}</h3>
-                      {task.description && (
-                        <p className="text-muted-foreground" data-testid="task-description">{task.description}</p>
-                      )}
-                      <div className="flex gap-2 flex-wrap">
-                        <span
-                          className={`inline-flex items-center px-3 py-1 rounded-md text-xs font-medium border ${getStatusBadgeClass(task.status)}`}
-                          data-testid="task-status"
-                        >
-                          {task.status}
-                        </span>
-                        <span
-                          className={`inline-flex items-center px-3 py-1 rounded-md text-xs font-medium ${getPriorityBadgeClass(task.priority)}`}
-                          data-testid="task-priority"
-                        >
-                          {task.priority}
-                        </span>
-                      </div>
-                    </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" data-testid="task-menu-button">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => openEditDialog(task)}
-                          data-testid="edit-task-button"
-                        >
-                          <Edit2 className="h-4 w-4 mr-2" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleDeleteTask(task.id)}
-                          className="text-destructive"
-                          data-testid="delete-task-button"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => openEditDialog(task)}
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                      data-testid="edit-task-button"
+                    >
+                      <FiEdit2 className="h-4 w-4 text-gray-400" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteTask(task.id)}
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                      data-testid="delete-task-button"
+                    >
+                      <FiTrash2 className="h-4 w-4 text-gray-400" />
+                    </button>
                   </div>
                 </div>
+              </motion.div>
+            );
+          })}
+
+          {/* Add Another Task Entry */}
+          <button
+            onClick={() => setIsCreateDialogOpen(true)}
+            className="w-full p-8 border-2 border-dashed border-gray-300 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-colors flex flex-col items-center justify-center gap-2"
+          >
+            <div className="w-10 h-10 bg-[#5f7a7a] rounded-lg flex items-center justify-center">
+              <FiPlus className="h-5 w-5 text-white" />
+            </div>
+            <span className="text-sm font-medium text-gray-600">Add Another Task Entry</span>
+          </button>
+        </div>
+      )}
+
+      {/* System Status */}
+      <div className="mt-8 bg-[#5f7a7a] rounded-2xl p-8 flex items-center justify-between">
+        <div className="flex items-center gap-6">
+          <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center">
+            <FiActivity className="h-8 w-8 text-white" />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-white mb-1">System Status</h3>
+            <p className="text-sm text-white/80">Environment: Production. All systems operational. 98.4% Uptime.</p>
+            <div className="flex items-center gap-1 mt-3">
+              {[...Array(10)].map((_, i) => (
+                <div
+                  key={i}
+                  className={`w-2 h-8 rounded-sm ${i < 8 ? 'bg-green-400' : 'bg-white/30'
+                    }`}
+                ></div>
               ))}
             </div>
-          )}
+          </div>
         </div>
-      </main>
+        <button className="px-6 py-2.5 bg-white rounded-lg text-sm font-medium text-gray-800 hover:bg-gray-100 transition-colors flex items-center gap-2">
+          <FiClock className="h-4 w-4" />
+          Log Activity
+        </button>
+      </div>
 
+      {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent data-testid="edit-task-dialog">
+        <DialogContent data-testid="edit-task-dialog" className="bg-white">
           <DialogHeader>
             <DialogTitle>Edit Task</DialogTitle>
           </DialogHeader>
@@ -479,6 +537,7 @@ const Dashboard = () => {
                 onChange={(e) => setTaskForm({ ...taskForm, title: e.target.value })}
                 placeholder="Enter task title"
                 data-testid="edit-task-title-input"
+                className="h-10"
               />
             </div>
             <div className="space-y-2">
@@ -489,6 +548,7 @@ const Dashboard = () => {
                 onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })}
                 placeholder="Enter task description"
                 data-testid="edit-task-description-input"
+                className="h-10"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -498,10 +558,10 @@ const Dashboard = () => {
                   value={taskForm.status}
                   onValueChange={(value) => setTaskForm({ ...taskForm, status: value })}
                 >
-                  <SelectTrigger data-testid="edit-task-status-select">
+                  <SelectTrigger data-testid="edit-task-status-select" className="h-10">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white">
                     <SelectItem value="pending">Pending</SelectItem>
                     <SelectItem value="in-progress">In Progress</SelectItem>
                     <SelectItem value="completed">Completed</SelectItem>
@@ -514,10 +574,10 @@ const Dashboard = () => {
                   value={taskForm.priority}
                   onValueChange={(value) => setTaskForm({ ...taskForm, priority: value })}
                 >
-                  <SelectTrigger data-testid="edit-task-priority-select">
+                  <SelectTrigger data-testid="edit-task-priority-select" className="h-10">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white">
                     <SelectItem value="low">Low</SelectItem>
                     <SelectItem value="medium">Medium</SelectItem>
                     <SelectItem value="high">High</SelectItem>
@@ -525,7 +585,7 @@ const Dashboard = () => {
                 </Select>
               </div>
             </div>
-            <Button type="submit" className="w-full" data-testid="edit-task-submit">
+            <Button type="submit" className="w-full bg-[#5f7a7a] hover:bg-[#4d6262]" data-testid="edit-task-submit">
               Update Task
             </Button>
           </form>
