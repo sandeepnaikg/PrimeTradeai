@@ -1,0 +1,169 @@
+{
+  "design_system": {
+    "identity": {
+      "name": "TaskFlow",
+      "archetype": "Swiss & High-Contrast",
+      "vibe": "Professional, Efficient, Scalable, Modern",
+      "principles": [
+        "Fusion over Imitation",
+        "Emotion First",
+        "Content is King",
+        "Zoom In",
+        "Negative Space",
+        "Contrast"
+      ]
+    },
+    "typography": {
+      "font_family": {
+        "headings": "Manrope, sans-serif",
+        "body": "Inter, sans-serif",
+        "mono": "JetBrains Mono, monospace"
+      },
+      "weights": {
+        "light": 300,
+        "regular": 400,
+        "medium": 500,
+        "bold": 700,
+        "black": 900
+      },
+      "scale": {
+        "h1": "text-4xl md:text-5xl font-bold tracking-tight",
+        "h2": "text-3xl md:text-4xl font-bold tracking-tight",
+        "h3": "text-2xl font-semibold tracking-tight",
+        "h4": "text-xl font-semibold tracking-tight",
+        "body_lg": "text-lg leading-relaxed",
+        "body_base": "text-base leading-relaxed",
+        "caption": "text-sm text-muted-foreground",
+        "overline": "text-xs font-bold uppercase tracking-widest text-muted-foreground"
+      },
+      "imports": [
+        "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700;800&display=swap');"
+      ]
+    },
+    "colors": {
+      "palette": {
+        "primary": {
+          "DEFAULT": "#0F172A",
+          "foreground": "#F8FAFC"
+        },
+        "secondary": {
+          "DEFAULT": "#F1F5F9",
+          "foreground": "#0F172A"
+        },
+        "accent": {
+          "DEFAULT": "#3B82F6",
+          "foreground": "#FFFFFF"
+        },
+        "background": "#FFFFFF",
+        "foreground": "#0F172A",
+        "muted": {
+          "DEFAULT": "#F8FAFC",
+          "foreground": "#64748B"
+        },
+        "border": "#E2E8F0",
+        "destructive": {
+          "DEFAULT": "#EF4444",
+          "foreground": "#FFFFFF"
+        }
+      },
+      "gradients": {
+        "subtle_glow": "bg-gradient-to-tr from-slate-50 to-slate-100",
+        "active_border": "bg-gradient-to-r from-blue-500 to-indigo-500"
+      }
+    },
+    "spacing": {
+      "container_padding": "p-6 md:p-12",
+      "section_gap": "gap-8 md:gap-12",
+      "element_gap": "gap-4",
+      "radius": {
+        "default": "rounded-lg",
+        "card": "rounded-xl",
+        "button": "rounded-md"
+      }
+    },
+    "layout": {
+      "grid_system": {
+        "dashboard": "grid grid-cols-1 md:grid-cols-12 gap-6",
+        "auth": "grid grid-cols-1 lg:grid-cols-2 h-screen w-full"
+      },
+      "containers": {
+        "main": "max-w-7xl mx-auto w-full",
+        "narrow": "max-w-3xl mx-auto w-full"
+      }
+    },
+    "motion": {
+      "transitions": {
+        "default": "transition-all duration-200 ease-in-out",
+        "hover": "hover:-translate-y-1 hover:shadow-md"
+      },
+      "animations": {
+        "fade_in": {
+          "initial": { "opacity": 0, "y": 10 },
+          "animate": { "opacity": 1, "y": 0 },
+          "transition": { "duration": 0.4 }
+        },
+        "stagger_children": {
+          "animate": { "transition": { "staggerChildren": 0.1 } }
+        }
+      }
+    },
+    "components": {
+      "buttons": {
+        "primary": "bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 rounded-md font-medium transition-all active:scale-95",
+        "secondary": "bg-secondary text-secondary-foreground hover:bg-secondary/80 h-10 px-4 py-2 rounded-md font-medium transition-all active:scale-95",
+        "ghost": "hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 rounded-md font-medium transition-all"
+      },
+      "cards": {
+        "base": "bg-card text-card-foreground rounded-xl border border-border shadow-sm hover:shadow-md transition-shadow duration-200",
+        "interactive": "cursor-pointer hover:border-primary/50 transition-colors"
+      },
+      "inputs": {
+        "base": "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+      }
+    },
+    "assets": {
+      "images": {
+        "auth_hero": {
+          "url": "https://images.unsplash.com/photo-1554751201-db13daf9e4ee?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2ODl8MHwxfHNlYXJjaHwzfHxhYnN0cmFjdCUyMG1pbmltYWwlMjBhcmNoaXRlY3R1cmUlMjB3aGl0ZSUyMGNvbmNyZXRlfGVufDB8fHx8MTc3MDY5NzQxOHww&ixlib=rb-4.1.0&q=85",
+          "alt": "Abstract architectural swirl",
+          "usage": "Right side of the login/register split screen. Object-fit cover."
+        },
+        "empty_state": {
+          "url": "https://images.unsplash.com/photo-1622579521534-8252f7da47fd?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzF8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBvZmZpY2UlMjB3b3Jrc3BhY2UlMjBkZXNrJTIwbWluaW1hbGlzdHxlbnwwfHx8fDE3NzA2OTc0MjR8MA&ixlib=rb-4.1.0&q=85",
+          "alt": "Minimalist workspace",
+          "usage": "Empty state for tasks list or dashboard placeholder."
+        }
+      },
+      "icons": {
+        "library": "lucide-react",
+        "preferred": ["LayoutDashboard", "CheckSquare", "User", "LogOut", "Plus", "Search", "Filter", "Trash2", "Edit2", "MoreVertical", "ChevronRight"]
+      }
+    }
+  },
+  "implementation_guide": {
+    "steps": [
+      "1. Setup Global Styles: Update index.css with font imports and base styles.",
+      "2. Configure Tailwind: Update tailwind.config.js with the color palette and font families.",
+      "3. Create Layouts: Build 'AuthLayout' (Split) and 'DashboardLayout' (Sidebar + Header).",
+      "4. Build Components: Customize Shadcn components (Button, Input, Card, Dialog, Dropdown) to match the design system.",
+      "5. Develop Pages: Implement Login, Register, Dashboard (Task List, Profile).",
+      "6. Add Interactions: Integrate framer-motion for smooth transitions."
+    ],
+    "rules": [
+      "Use 'Manrope' for all headings (h1-h4).",
+      "Use 'Inter' for all body text.",
+      "Ensure all interactive elements have hover states defined.",
+      "Use the 'Swiss Grid' approach: alignment is key. Don't center everything.",
+      "Forms should be clean, single column, with clear labels.",
+      "Task items should be in a list or grid view, card-based but minimal borders.",
+      "Profile section should be a modal or a dedicated clean card in the dashboard."
+    ],
+    "universal_guidelines": [
+      "Do not use gradients for backgrounds unless specified.",
+      "Avoid 'Inter' for headings.",
+      "Use 'sonner' for toast notifications.",
+      "Ensure all inputs have 'data-testid' attributes.",
+      "Mobile responsiveness is mandatory (stack grids on mobile)."
+    ]
+  }
+}
